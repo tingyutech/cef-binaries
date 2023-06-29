@@ -34,8 +34,8 @@ jobs:
     - name: Download source code
       run: |
         mkdir source
-        curl -L -o source/source.tar.bz2 https://cef-builds.spotifycdn.com/${{VERSION}}.tar.bz2
-        echo "https://cef-builds.spotifycdn.com/${{VERSION}}.tar.bz2 downloaded"
+        curl -L -o source/source.tar.bz2 https://cef-builds.spotifycdn.com/${{env.VERSION}}.tar.bz2
+        echo "https://cef-builds.spotifycdn.com/${{env.VERSION}}.tar.bz2 downloaded"
 
     - name: Extract bzip2 file
       run: |
