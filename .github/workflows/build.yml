@@ -131,6 +131,5 @@ jobs:
         name: Release ${{ github.ref == 'refs/heads/main' && 'nightly' || env.VERSION }}
         draft: false
         prerelease: false
-        files:
-          - artifacts/**/*
+        files: artifacts/**/*
 
