@@ -45,7 +45,7 @@ jobs:
           $VERSION = ${env:DEFAULT_VERSION}
         }
         $VERSION = "${VERSION}_windows64_minimal"
-        echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "VERSION=$VERSION" >> $env:GITHUB_ENV
         echo "version: $VERSION"
 
     - name: Download source code
@@ -57,14 +57,14 @@ jobs:
     - name: Extract bzip2 file (Linux)
       if: runner.os == 'Linux'
       run: |
-        tar -xjf source.tar.bz2
+        tar -xjvf source.tar.bz2
         mv ${{env.VERSION}} ./source
 
     - name: Extract bzip2 file (Windows)
       if: runner.os == 'Windows'
       run: |
-        tar -xjf source.tar.bz2
-        mv $env:VERSION ./source
+        tar -xjvf source.tar.bz2
+        mv ${{env.VERSION}} ./source
 
     - name: Generate cmake release config
       run: |
