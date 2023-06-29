@@ -38,7 +38,7 @@ jobs:
     - name: Extract bzip2 file
       run: |
         if [[ ${{ runner.os }} == "Windows" ]]; then
-          & Expand-Archive -Path source/source.bz2 -DestinationPath source -Force
+          Expand-Archive -Path source/source.bz2 -DestinationPath source -Force
         else
           tar -xjf source/source.bz2 -C source
         fi
