@@ -36,6 +36,7 @@ jobs:
         echo "VERSION=$VERSION" >> $GITHUB_ENV
         echo "version: $VERSION"
 
+    # do not use minimal edition or doxygen will fail.
     - name: Define version (Windows)
       if: runner.os == 'Windows'
       run: |
@@ -44,7 +45,7 @@ jobs:
         } else {
           $VERSION = ${env:DEFAULT_VERSION}
         }
-        $VERSION = "${VERSION}_windows64_minimal"
+        $VERSION = "${VERSION}_windows64"
         echo "VERSION=$VERSION" >> $env:GITHUB_ENV
         echo "version: $VERSION"
 
