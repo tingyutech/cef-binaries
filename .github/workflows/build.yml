@@ -87,7 +87,7 @@ jobs:
         mkdir dist
         cp -r source/Release/* dist/
         cp -r source/Resources/* dist/
-        cp -r source/libcef_dll_wrapper/**/*.a dist/
+        cp -r source/libcef_dll_wrapper/libcef_dll_wrapper.a dist/
 
     - name: Prepare dist folder (Windows)
       if: runner.os == 'Windows'
