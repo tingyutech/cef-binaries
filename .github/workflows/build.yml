@@ -1,0 +1,103 @@
+name: CI
+
+on: 
+  push:
+    branches: 
+      - main
+    tags: 
+      - 'cef_binary*'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup cmake
+      uses: jwlawson/actions-setup-cmake@v1.14
+
+    - name: Define version
+      run: |
+        if [[ $GITHUB_REF == refs/tags/* ]]; then
+          VERSION=${GITHUB_REF#refs/tags/}
+        else
+          VERSION=${DEFAULT_VERSION}
+        fi
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+    - name: Download source code
+      run: |
+        mkdir source
+        curl -L -o source/source.bz2 https://cef-builds.spotifycdn.com/${{ env.VERSION }}.tar.bz2
+
+    - name: Extract bzip2 file
+      run: |
+        if [[ ${{ runner.os }} == "Windows" ]]; then
+          & Expand-Archive -Path source/source.bz2 -DestinationPath source -Force
+        else
+          tar -xjf source/source.bz2 -C source
+        fi
+
+    - name: Generate cmake release config
+      run: |
+        cmake -DCMAKE_BUILD_TYPE=Release .
+
+    - name: CMake build
+      run: |
+        cmake --build . --config Release
+
+    - name: Prepare dist folder
+      run: |
+        mkdir dist
+        cp Release/* dist/
+        cp Resource/* dist/
+        cp libcef_dll_wrapper/Release/* dist/
+
+    - name: Create dist archive
+      run: |
+        if [[ ${{ runner.os }} == "Windows" ]]; then
+          Compress-Archive -Path dist -DestinationPath dist.zip
+        else
+          tar -zcvf dist.tar.gz dist
+        fi
+
+    - name: Setup GitHub CLI
+      run: |
+        sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
+        sudo apt-add-repository https://cli.github.com/packages
+        sudo apt update
+        sudo apt install gh
+
+    - name: Delete old nightly release
+      run: |
+        if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+          gh release delete nightly --confirm
+        fi
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref == 'refs/heads/master' && 'nightly' || env.VERSION }}
+        release_name: Release ${{ github.ref == 'refs/heads/master' && 'nightly' || env.VERSION }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }} 
+        asset_path: ${{ runner.os == 'Windows' && 'dist.zip' || 'dist.tar.gz' }}
+        asset_name: ${{ runner.os == 'Windows' && 'dist.zip' || 'dist.tar.gz' }}
+        asset_content_type: ${{ runner.os == 'Windows' && 'application/zip' || 'application/gzip' }}
