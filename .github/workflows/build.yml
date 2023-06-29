@@ -100,7 +100,7 @@ jobs:
         path: windows64.zip
 
   deploy:
-    need: build
+    needs: build
     runs-on: ubuntu-latest
     steps:
     - name: Download All Artifacts
