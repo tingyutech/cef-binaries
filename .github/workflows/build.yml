@@ -14,8 +14,9 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, windows-latest]
 
     steps:
     - name: Checkout code
@@ -80,7 +81,16 @@ jobs:
         ls
         cmake --build . --config Release
 
-    - name: Prepare dist folder
+    - name: Prepare dist folder (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        mkdir dist
+        cp -r source/Release/* dist/
+        cp -r source/Resources/* dist/
+        cp -r source/libcef_dll_wrapper/**/*.a dist/
+
+    - name: Prepare dist folder (Windows)
+      if: runner.os == 'Windows'
       run: |
         mkdir dist
         cp -r source/Release/* dist/
@@ -88,7 +98,6 @@ jobs:
         cp -r source/libcef_dll_wrapper/**/*.pdb dist/
         cp -r source/libcef_dll_wrapper/**/*.dll dist/
         cp -r source/libcef_dll_wrapper/**/*.lib dist/
-        cp -r source/libcef_dll_wrapper/**/*.a dist/
 
     - name: Create dist archive (Linux)
       if: runner.os == 'Linux'
@@ -118,6 +127,9 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
     - name: Download All Artifacts
       uses: actions/download-artifact@v3
       with:
