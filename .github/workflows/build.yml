@@ -75,7 +75,7 @@ jobs:
 
     - name: Delete old nightly release
       run: |
-        if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+        if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
           echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
           gh release delete nightly --confirm
         fi
@@ -86,8 +86,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.ref == 'refs/heads/master' && 'nightly' || env.VERSION }}
-        release_name: Release ${{ github.ref == 'refs/heads/master' && 'nightly' || env.VERSION }}
+        tag_name: ${{ github.ref == 'refs/heads/main' && 'nightly' || env.VERSION }}
+        release_name: Release ${{ github.ref == 'refs/heads/main' && 'nightly' || env.VERSION }}
         draft: false
         prerelease: false
 
