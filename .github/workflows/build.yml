@@ -79,9 +79,9 @@ jobs:
     - name: Prepare dist folder
       run: |
         mkdir dist
-        cp source/Release/* dist/
-        cp source/Resources/* dist/
-        cp source/libcef_dll_wrapper/Release/* dist/
+        cp -r source/Release/* dist/
+        cp -r source/Resources/* dist/
+        cp -r source/libcef_dll_wrapper/Release/* dist/
 
     - name: Create dist archive (Linux)
       if: runner.os == 'Linux'
