@@ -24,18 +24,27 @@ jobs:
     - name: Setup cmake
       uses: jwlawson/actions-setup-cmake@v1.14
 
-    - name: Define version
+    - name: Define version (Linux)
+      if: runner.os == 'Linux'
       run: |
         if [[ $GITHUB_REF == refs/tags/* ]]; then
           VERSION=${GITHUB_REF#refs/tags/}
         else
           VERSION=${{env.DEFAULT_VERSION}}
         fi
-        if [[ ${{ runner.os }} == "Windows" ]]; then
-          VERSION="${VERSION}_windows64_minimal"
-        else
-          VERSION="${VERSION}_linux64_minimal"
-        fi
+        VERSION="${VERSION}_linux64_minimal"
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "version: $VERSION"
+
+    - name: Define version (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        if ($env:GITHUB_REF -match "refs/tags/") {
+          $VERSION = $env:GITHUB_REF -replace "refs/tags/",""
+        } else {
+          $VERSION = ${env:DEFAULT_VERSION}
+        }
+        $VERSION = "${VERSION}_windows64_minimal"
         echo "VERSION=$VERSION" >> $GITHUB_ENV
         echo "version: $VERSION"
 
@@ -66,14 +75,38 @@ jobs:
         cp source/Resource/* dist/
         cp source/libcef_dll_wrapper/Release/* dist/
 
-    - name: Create dist archive
+    - name: Create dist archive (Linux)
+      if: runner.os == 'Linux'
       run: |
-        if [[ ${{ runner.os }} == "Windows" ]]; then
-          Compress-Archive -Path dist -DestinationPath dist.zip
-        else
-          tar -zcvf dist.tar.gz dist
-        fi
+        tar -zcvf linux64.tar.gz dist
 
+    - name: Create dist archive (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        Compress-Archive -Path dist -DestinationPath windows64.zip
+        
+    - name: Upload artifact (Linux)
+      if: runner.os == 'Linux'
+      uses: actions/upload-artifact@v3
+      with:
+        name: linux64
+        path: linux64.tar.gz
+        
+    - name: Upload artifact (Windows)
+      if: runner.os == 'Windows'
+      uses: actions/upload-artifact@v3
+      with:
+        name: windows64
+        path: windows64.zip
+
+  deploy:
+    need: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download All Artifacts
+      uses: actions/download-artifact@v3
+      with:
+        path: artifacts
     - name: Setup GitHub CLI
       run: |
         sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
@@ -90,22 +123,14 @@ jobs:
 
     - name: Create Release
       id: create_release
-      uses: actions/create-release@v1
+      uses: softprops/action-gh-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ github.ref == 'refs/heads/main' && 'nightly' || env.VERSION }}
-        release_name: Release ${{ github.ref == 'refs/heads/main' && 'nightly' || env.VERSION }}
+        name: Release ${{ github.ref == 'refs/heads/main' && 'nightly' || env.VERSION }}
         draft: false
         prerelease: false
+        files:
+          - artifacts/**/*
 
-    - name: Upload Release Asset
-      id: upload-release-asset 
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }} 
-        asset_path: ${{ runner.os == 'Windows' && 'dist.zip' || 'dist.tar.gz' }}
-        asset_name: ${{ runner.os == 'Windows' && 'dist.zip' || 'dist.tar.gz' }}
-        asset_content_type: ${{ runner.os == 'Windows' && 'application/zip' || 'application/gzip' }}
