@@ -76,6 +76,7 @@ jobs:
     - name: CMake build
       run: |
         cd source
+        ls
         cmake --build . --config Release
 
     - name: Prepare dist folder
