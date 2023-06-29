@@ -80,7 +80,7 @@ jobs:
       run: |
         mkdir dist
         cp source/Release/* dist/
-        cp source/Resource/* dist/
+        cp source/Resources/* dist/
         cp source/libcef_dll_wrapper/Release/* dist/
 
     - name: Create dist archive (Linux)
