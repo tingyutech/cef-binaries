@@ -32,9 +32,9 @@ jobs:
           VERSION=${{env.DEFAULT_VERSION}}
         fi
         if [[ ${{ runner.os }} == "Windows" ]]; then
-          VERSION="${{VERSION}}_windows64_minimal"
+          VERSION="$VERSION_windows64_minimal"
         else
-          VERSION="${{VERSION}}_linux64_minimal"
+          VERSION="$VERSION_linux64_minimal"
         fi
         echo "VERSION=$VERSION" >> $GITHUB_ENV
         echo "version: $VERSION"
