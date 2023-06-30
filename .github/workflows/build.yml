@@ -85,6 +85,7 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         mkdir dist
+        cp -r source/Release/include dist/
         cp -r source/Release/* dist/
         cp -r source/Resources/* dist/
         cp -r source/libcef_dll_wrapper/libcef_dll_wrapper.a dist/
@@ -93,6 +94,7 @@ jobs:
       if: runner.os == 'Windows'
       run: |
         mkdir dist
+        cp -r source/Release/include dist/
         cp -r source/Release/* dist/
         cp -r source/Resources/* dist/
         cp -r source/libcef_dll_wrapper/Release/* dist/
