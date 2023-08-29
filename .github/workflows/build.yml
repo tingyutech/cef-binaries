@@ -17,7 +17,10 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-
+        arch: [arm64, x86_64]
+        exclude:
+          - os: windows-latest
+            arch: arm64
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -73,7 +76,7 @@ jobs:
     - name: Generate cmake release config
       run: |
         cd source
-        cmake -DCMAKE_BUILD_TYPE=Release .
+        cmake -DCMAKE_BUILD_TYPE=Release -DPROJECT_ARCH="${{ matrix.arch }}" .
 
     - name: CMake build
       run: |
@@ -102,26 +105,26 @@ jobs:
     - name: Create dist archive (Linux)
       if: runner.os == 'Linux'
       run: |
-        tar -zcvf linux64.tar.gz dist
+        tar -zcvf linux-${{ matrix.arch }}.tar.gz dist
 
     - name: Create dist archive (Windows)
       if: runner.os == 'Windows'
       run: |
-        Compress-Archive -Path dist -DestinationPath windows64.zip
+        Compress-Archive -Path dist -DestinationPath windows-${{ matrix.arch }}.zip
         
     - name: Upload artifact (Linux)
       if: runner.os == 'Linux'
       uses: actions/upload-artifact@v3
       with:
-        name: linux64
-        path: linux64.tar.gz
+        name: linux-${{ matrix.arch }}
+        path: linux-${{ matrix.arch }}.tar.gz
         
     - name: Upload artifact (Windows)
       if: runner.os == 'Windows'
       uses: actions/upload-artifact@v3
       with:
-        name: windows64
-        path: windows64.zip
+        name: windows-${{ matrix.arch }}
+        path: windows-${{ matrix.arch }}.zip
 
   deploy:
     needs: build
