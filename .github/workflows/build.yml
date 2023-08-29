@@ -18,7 +18,9 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         arch: [arm64, x86_64]
-
+        exclude:
+          - os: windows-latest
+            arch: arm64
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -74,7 +76,7 @@ jobs:
     - name: Generate cmake release config
       run: |
         cd source
-        cmake -DCMAKE_BUILD_TYPE=Release .
+        cmake -DCMAKE_BUILD_TYPE=Release -DPROJECT_ARCH="${{ matrix.arch }}" .
 
     - name: CMake build
       run: |
@@ -114,15 +116,15 @@ jobs:
       if: runner.os == 'Linux'
       uses: actions/upload-artifact@v3
       with:
-        name: linux64
-        path: linux64.tar.gz
+        name: linux-${{ matrix.arch }}
+        path: linux-${{ matrix.arch }}.tar.gz
         
     - name: Upload artifact (Windows)
       if: runner.os == 'Windows'
       uses: actions/upload-artifact@v3
       with:
-        name: windows64
-        path: windows64.zip
+        name: windows-${{ matrix.arch }}
+        path: windows-${{ matrix.arch }}.zip
 
   deploy:
     needs: build
