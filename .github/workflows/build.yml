@@ -17,6 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
+        arch: [arm64, x86_64]
 
     steps:
     - name: Checkout code
@@ -102,12 +103,12 @@ jobs:
     - name: Create dist archive (Linux)
       if: runner.os == 'Linux'
       run: |
-        tar -zcvf linux64.tar.gz dist
+        tar -zcvf linux-${{ matrix.arch }}.tar.gz dist
 
     - name: Create dist archive (Windows)
       if: runner.os == 'Windows'
       run: |
-        Compress-Archive -Path dist -DestinationPath windows64.zip
+        Compress-Archive -Path dist -DestinationPath windows-${{ matrix.arch }}.zip
         
     - name: Upload artifact (Linux)
       if: runner.os == 'Linux'
