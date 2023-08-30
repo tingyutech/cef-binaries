@@ -28,6 +28,16 @@ jobs:
     - name: Setup cmake
       uses: jwlawson/actions-setup-cmake@v1.14
 
+    - name: Cross compile toolchain (Linux)
+      if: ${{ matrix.arch == 'arm64' && matrix.os == 'ubuntu-latest' }}
+      run: |
+        wget https://snapshots.linaro.org/gnu-toolchain/14.0-2023.06-1/aarch64-linux-gnu/gcc-linaro-14.0.0-2023.06-x86_64_aarch64-linux-gnu.tar.xz
+        tar xvf ./gcc-linaro-14.0.0-2023.06-x86_64_aarch64-linux-gnu.tar.xz
+        rm -rf ./gcc-linaro-14.0.0-2023.06-x86_64_aarch64-linux-gnu.tar.xz
+        cd gcc-linaro-14.0.0-2023.06-x86_64_aarch64-linux-gnu
+        CROSS_COMPILE_PREFIX=$(pwd)
+        echo "CROSS_COMPILE_PREFIX=$CROSS_COMPILE_PREFIX" >> $GITHUB_ENV
+        
     - name: Define version (Linux)
       if: runner.os == 'Linux'
       run: |
@@ -36,7 +46,11 @@ jobs:
         else
           VERSION=${{env.DEFAULT_VERSION}}
         fi
-        VERSION="${VERSION}_linux64_minimal"
+        if [[ ${{ matrix.arch }} == arm64 ]]; then
+          VERSION="${VERSION}_linuxarm64_minimal"
+        else
+          VERSION="${VERSION}_linux64_minimal"
+        fi
         echo "VERSION=$VERSION" >> $GITHUB_ENV
         echo "version: $VERSION"
 
@@ -73,10 +87,22 @@ jobs:
         7z x source.tar
         mv ${{env.VERSION}} ./source
 
-    - name: Generate cmake release config
+    - name: Generate cmake release config (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        export CROSS_COMPILE_PREFIX=${{env.CROSS_COMPILE_PREFIX}}
+        cd source
+        if [[ ${{ matrix.arch }} == arm64 ]]; then
+          cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../arm_linux.cmake -DPROJECT_ARCH="arm64" .
+        else
+          cmake -DCMAKE_BUILD_TYPE=Release .
+        fi
+
+    - name: Generate cmake release config (Windows)
+      if: runner.os == 'Windows'
       run: |
         cd source
-        cmake -DCMAKE_BUILD_TYPE=Release -DPROJECT_ARCH="${{ matrix.arch }}" .
+        cmake -DCMAKE_BUILD_TYPE=Release .
 
     - name: CMake build
       run: |
