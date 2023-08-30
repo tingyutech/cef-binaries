@@ -36,7 +36,11 @@ jobs:
         else
           VERSION=${{env.DEFAULT_VERSION}}
         fi
-        VERSION="${VERSION}_linux64_minimal"
+        if [[ ${{ matrix.arch }} == arm64 ]]; then
+          VERSION="${VERSION}_linuxarm64_minimal"
+        else
+          VERSION="${VERSION}_linux64_minimal"
+        fi
         echo "VERSION=$VERSION" >> $GITHUB_ENV
         echo "version: $VERSION"
 
