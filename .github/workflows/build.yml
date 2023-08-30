@@ -28,6 +28,16 @@ jobs:
     - name: Setup cmake
       uses: jwlawson/actions-setup-cmake@v1.14
 
+    - name: Cross compile toolchain (Linux)
+      if: ${{ matrix.arch }} == 'arm64'
+      run: |
+        wget https://snapshots.linaro.org/gnu-toolchain/14.0-2023.06-1/aarch64-linux-gnu/gcc-linaro-14.0.0-2023.06-x86_64_aarch64-linux-gnu.tar.xz
+        tar xvf ./gcc-linaro-14.0.0-2023.06-x86_64_aarch64-linux-gnu.tar.xz
+        rm -rf ./gcc-linaro-14.0.0-2023.06-x86_64_aarch64-linux-gnu.tar.xz
+        cd gcc-linaro-14.0.0-2023.06-x86_64_aarch64-linux-gnu
+        CROSS_COMPILE_PREFIX=$(pwd)
+        echo "CROSS_COMPILE_PREFIX=$CROSS_COMPILE_PREFIX" >> $GITHUB_ENV
+        
     - name: Define version (Linux)
       if: runner.os == 'Linux'
       run: |
