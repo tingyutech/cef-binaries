@@ -29,7 +29,7 @@ jobs:
       uses: jwlawson/actions-setup-cmake@v1.14
 
     - name: Cross compile toolchain (Linux)
-      if: ${{ matrix.arch }} == 'arm64'
+      if: ${{ matrix.arch == 'arm64' && matrix.os == 'ubuntu-latest' }}
       run: |
         wget https://snapshots.linaro.org/gnu-toolchain/14.0-2023.06-1/aarch64-linux-gnu/gcc-linaro-14.0.0-2023.06-x86_64_aarch64-linux-gnu.tar.xz
         tar xvf ./gcc-linaro-14.0.0-2023.06-x86_64_aarch64-linux-gnu.tar.xz
