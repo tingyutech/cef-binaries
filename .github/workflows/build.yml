@@ -89,8 +89,13 @@ jobs:
 
     - name: Generate cmake release config
       run: |
+        export CROSS_COMPILE_PREFIX=${{env.CROSS_COMPILE_PREFIX}}
         cd source
-        cmake -DCMAKE_BUILD_TYPE=Release -DPROJECT_ARCH="${{ matrix.arch }}" .
+        if [[ ${{ matrix.arch }} == arm64 ]]; then
+          cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../arm_linux.cmake -DPROJECT_ARCH="${{ matrix.arch }}" .
+        else
+          cmake -DCMAKE_BUILD_TYPE=Release -DPROJECT_ARCH="${{ matrix.arch }}" .
+        fi
 
     - name: CMake build
       run: |
