@@ -21,6 +21,8 @@ jobs:
         exclude:
           - os: windows-latest
             arch: arm64
+          - os: ubuntu-latest
+            cef_version: 'cef_binary_109.1.18+gf1c41e4+chromium-109.0.5414.120'
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
