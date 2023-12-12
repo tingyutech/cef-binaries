@@ -56,7 +56,7 @@ jobs:
         
         PREFIX=$(echo $VERSION | cut -d'-' -f2)
         echo "VERSION=$VERSION" >> $GITHUB_ENV
-        echo "VERSION=$PREFIX" >> $GITHUB_ENV
+        echo "PREFIX=$PREFIX" >> $GITHUB_ENV
         echo "version: $VERSION"
 
     # do not use minimal edition or doxygen will fail.
@@ -72,7 +72,7 @@ jobs:
         $PREFIX = $($VERSION -split "chromium-")[1];
         $VERSION = "${VERSION}_windows64";
         echo "VERSION=$VERSION" >> $env:GITHUB_ENV
-        echo "VERSION=$PREFIX" >> $env:GITHUB_ENV
+        echo "PREFIX=$PREFIX" >> $env:GITHUB_ENV
         echo "version: $VERSION"
 
     - name: Download source code and Extract bzip2 file
