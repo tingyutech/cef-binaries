@@ -7,9 +7,6 @@ on:
     tags: 
       - 'cef_binary*'
       
-env:
-  DEFAULT_VERSION: "cef_binary_114.2.11+g87c8807+chromium-114.0.5735.134"
-
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -17,6 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
+        cef_version: ["cef_binary_114.2.11+g87c8807+chromium-114.0.5735.134", "cef_binary_109.1.18+gf1c41e4+chromium-109.0.5414.120"]
         arch: [arm64, x86_64]
         exclude:
           - os: windows-latest
@@ -44,7 +42,7 @@ jobs:
         if [[ $GITHUB_REF == refs/tags/* ]]; then
           VERSION=${GITHUB_REF#refs/tags/}
         else
-          VERSION=${{env.DEFAULT_VERSION}}
+          VERSION=${{ matrix.cef_version }}
         fi
         if [[ ${{ matrix.arch }} == arm64 ]]; then
           VERSION="${VERSION}_linuxarm64_minimal"
@@ -61,7 +59,7 @@ jobs:
         if ($env:GITHUB_REF -match "refs/tags/") {
           $VERSION = $env:GITHUB_REF -replace "refs/tags/",""
         } else {
-          $VERSION = ${env:DEFAULT_VERSION}
+          $VERSION = ${{ matrix.cef_version }}
         }
         $VERSION = "${VERSION}_windows64"
         echo "VERSION=$VERSION" >> $env:GITHUB_ENV
@@ -142,15 +140,15 @@ jobs:
       if: runner.os == 'Linux'
       uses: actions/upload-artifact@v3
       with:
-        name: linux-${{ matrix.arch }}
-        path: linux-${{ matrix.arch }}.tar.gz
+        name: linux-${{ matrix.arch }}-${{ matrix.cef_version }}
+        path: linux-${{ matrix.arch }}-${{ matrix.cef_version }}.tar.gz
         
     - name: Upload artifact (Windows)
       if: runner.os == 'Windows'
       uses: actions/upload-artifact@v3
       with:
-        name: windows-${{ matrix.arch }}
-        path: windows-${{ matrix.arch }}.zip
+        name: windows-${{ matrix.arch }}-${{ matrix.cef_version }}
+        path: windows-${{ matrix.arch }}-${{ matrix.cef_version }}.zip
 
   deploy:
     needs: build
