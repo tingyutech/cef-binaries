@@ -53,7 +53,10 @@ jobs:
         else
           VERSION="${VERSION}_linux64_minimal"
         fi
+        
+        PREFIX=$(echo $aaa | cut -d'-' -f2)
         echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "VERSION=$PREFIX" >> $GITHUB_ENV
         echo "version: $VERSION"
 
     # do not use minimal edition or doxygen will fail.
@@ -65,8 +68,11 @@ jobs:
         } else {
           $VERSION = "${{ matrix.cef_version }}"
         }
-        $VERSION = "${VERSION}_windows64"
+        
+        $PREFIX = $($aaa -split "chromium-")[1];
+        $VERSION = "${VERSION}_windows64";
         echo "VERSION=$VERSION" >> $env:GITHUB_ENV
+        echo "VERSION=$PREFIX" >> $env:GITHUB_ENV
         echo "version: $VERSION"
 
     - name: Download source code and Extract bzip2 file
@@ -144,15 +150,15 @@ jobs:
       if: runner.os == 'Linux'
       uses: actions/upload-artifact@v3
       with:
-        name: linux-${{ matrix.arch }}-${{ matrix.cef_version }}
-        path: linux-${{ matrix.arch }}-${{ matrix.cef_version }}.tar.gz
+        name: linux-${{ matrix.arch }}-${{ env.PREFIX }}
+        path: linux-${{ matrix.arch }}-${{ env.PREFIX }}.tar.gz
         
     - name: Upload artifact (Windows)
       if: runner.os == 'Windows'
       uses: actions/upload-artifact@v3
       with:
-        name: windows-${{ matrix.arch }}-${{ matrix.cef_version }}
-        path: windows-${{ matrix.arch }}-${{ matrix.cef_version }}.zip
+        name: windows-${{ matrix.arch }}-${{ env.PREFIX }}
+        path: windows-${{ matrix.arch }}-${{ env.PREFIX }}.zip
 
   deploy:
     needs: build
