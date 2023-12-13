@@ -54,7 +54,7 @@ jobs:
           VERSION="${VERSION}_linux64_minimal"
         fi
         
-        PREFIX=$(echo $VERSION | cut -d'-' -f2)
+        PREFIX=$(echo $VERSION | cut -d'-' -f2 | cut -d'_' -f1)
         echo "VERSION=$VERSION" >> $GITHUB_ENV
         echo "PREFIX=$PREFIX" >> $GITHUB_ENV
         echo "version: $VERSION"
