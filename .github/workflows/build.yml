@@ -139,12 +139,12 @@ jobs:
     - name: Create dist archive (Linux)
       if: runner.os == 'Linux'
       run: |
-        tar -zcvf linux-${{ matrix.arch }}.tar.gz dist
+        tar -zcvf linux-${{ matrix.arch }}-${{ env.PREFIX }}.tar.gz dist
 
     - name: Create dist archive (Windows)
       if: runner.os == 'Windows'
       run: |
-        Compress-Archive -Path dist -DestinationPath windows-${{ matrix.arch }}.zip
+        Compress-Archive -Path dist -DestinationPath windows-${{ matrix.arch }}-${{ env.PREFIX }}.zip
         
     - name: Upload artifact (Linux)
       if: runner.os == 'Linux'
