@@ -45,11 +45,7 @@ jobs:
       - name: Define version (Linux)
         if: runner.os == 'Linux'
         run: |
-          if [[ $GITHUB_REF == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/}
-          else
-            VERSION=${{ matrix.cef_version }}
-          fi
+          VERSION=${{ matrix.cef_version }}
 
           if [[ ${{ matrix.arch }} == arm64 ]]; then
             VERSION="${VERSION}_linuxarm64_minimal"
@@ -68,11 +64,7 @@ jobs:
       - name: Define version (Windows)
         if: runner.os == 'Windows'
         run: |
-          if ($env:GITHUB_REF -match "refs/tags/") {
-            $VERSION = $env:GITHUB_REF -replace "refs/tags/",""
-          } else {
-            $VERSION = "${{ matrix.cef_version }}"
-          }
+          $VERSION = "${{ matrix.cef_version }}"
 
           $PREFIX = $($VERSION -split "chromium-")[1];
 
