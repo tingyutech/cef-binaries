@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - next
     tags:
       - 'release_*'
 
@@ -17,10 +18,10 @@ jobs:
         cef_version:
           - 'cef_binary_114.2.11+g87c8807+chromium-114.0.5735.134'
           - 'cef_binary_109.1.18+gf1c41e4+chromium-109.0.5414.120'
-        arch: [arm64, x86_64, x86]
+        arch: [aarch64, x86_64, x86]
         exclude:
           - os: windows-2022
-            arch: arm64
+            arch: aarch64
           - os: ubuntu-22.04
             cef_version: 'cef_binary_109.1.18+gf1c41e4+chromium-109.0.5414.120'
           - os: ubuntu-22.04
@@ -33,7 +34,7 @@ jobs:
         uses: jwlawson/actions-setup-cmake@v1.14
 
       - name: Cross compile toolchain (Linux)
-        if: ${{ matrix.arch == 'arm64' && matrix.os == 'ubuntu-22.04' }}
+        if: ${{ matrix.arch == 'aarch64' && matrix.os == 'ubuntu-22.04' }}
         run: |
           wget https://snapshots.linaro.org/gnu-toolchain/14.0-2023.06-1/aarch64-linux-gnu/gcc-linaro-14.0.0-2023.06-x86_64_aarch64-linux-gnu.tar.xz
           tar xvf ./gcc-linaro-14.0.0-2023.06-x86_64_aarch64-linux-gnu.tar.xz
@@ -47,7 +48,7 @@ jobs:
         run: |
           VERSION=${{ matrix.cef_version }}
 
-          if [[ ${{ matrix.arch }} == arm64 ]]; then
+          if [[ ${{ matrix.arch }} == aarch64 ]]; then
             VERSION="${VERSION}_linuxarm64_minimal"
           elif [[ ${{ matrix.arch }} == x86_64 ]]; then
             VERSION="${VERSION}_linux64_minimal"
@@ -103,7 +104,7 @@ jobs:
         run: |
           export CROSS_COMPILE_PREFIX=${{env.CROSS_COMPILE_PREFIX}}
           cd source
-          if [[ ${{ matrix.arch }} == arm64 ]]; then
+          if [[ ${{ matrix.arch }} == aarch64 ]]; then
             cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../arm_linux.cmake -DPROJECT_ARCH="arm64" .
           else
             cmake -DCMAKE_BUILD_TYPE=Release .
@@ -180,11 +181,15 @@ jobs:
         with:
           path: artifacts
 
-      - name: Delete old nightly release
+      - name: Delete old nightly or next release
         run: |
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
             gh release delete nightly -y
+          fi
+          if [[ "${{ github.ref }}" == "refs/heads/next" ]]; then
+            echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+            gh release delete next -y
           fi
 
       - name: Create Release
@@ -193,8 +198,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref == 'refs/heads/main' && 'nightly' || env.VERSION }}
-          name: Release ${{ github.ref == 'refs/heads/main' && 'nightly' || env.VERSION }}
+          tag_name: ${{ (github.ref == 'refs/heads/main' && 'nightly') || (github.ref == 'refs/heads/next' && 'next') || env.VERSION }}
+          name: Release ${{ (github.ref == 'refs/heads/main' && 'nightly') || (github.ref == 'refs/heads/next' && 'next') || env.VERSION }}
           draft: false
           prerelease: false
           files: artifacts/**/*
