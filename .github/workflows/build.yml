@@ -5,7 +5,7 @@ on:
     branches:
       - main
     tags:
-      - 'cef_binary*'
+      - 'release_*'
 
 jobs:
   build:
