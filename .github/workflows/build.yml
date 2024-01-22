@@ -6,9 +6,6 @@ on:
       - main
     tags: 
       - 'cef_binary*'
-      
-env:
-  DEFAULT_VERSION: "cef_binary_114.2.11+g87c8807+chromium-114.0.5735.134"
 
 jobs:
   build:
@@ -17,10 +14,15 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        arch: [arm64, x86_64]
+        cef_version: 
+          - 'cef_binary_114.2.11+g87c8807+chromium-114.0.5735.134'
+          - 'cef_binary_109.1.18+gf1c41e4+chromium-109.0.5414.120'
+        arch: [arm64, x86_64, x86]
         exclude:
           - os: windows-latest
             arch: arm64
+          - os: ubuntu-latest
+            cef_version: 'cef_binary_109.1.18+gf1c41e4+chromium-109.0.5414.120'
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -44,14 +46,20 @@ jobs:
         if [[ $GITHUB_REF == refs/tags/* ]]; then
           VERSION=${GITHUB_REF#refs/tags/}
         else
-          VERSION=${{env.DEFAULT_VERSION}}
+          VERSION=${{ matrix.cef_version }}
         fi
+
         if [[ ${{ matrix.arch }} == arm64 ]]; then
           VERSION="${VERSION}_linuxarm64_minimal"
-        else
+        else if [[ ${{ matrix.arch }} == x86_64 ]]; then
           VERSION="${VERSION}_linux64_minimal"
+        else
+          VERSION="${VERSION}_linux32_minimal"
         fi
+
+        PREFIX=$(echo $VERSION | cut -d'-' -f2 | cut -d'_' -f1)
         echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "PREFIX=$PREFIX" >> $GITHUB_ENV
         echo "version: $VERSION"
 
     # do not use minimal edition or doxygen will fail.
@@ -61,10 +69,19 @@ jobs:
         if ($env:GITHUB_REF -match "refs/tags/") {
           $VERSION = $env:GITHUB_REF -replace "refs/tags/",""
         } else {
-          $VERSION = ${env:DEFAULT_VERSION}
+          $VERSION = "${{ matrix.cef_version }}"
         }
-        $VERSION = "${VERSION}_windows64"
+        
+        $PREFIX = $($VERSION -split "chromium-")[1];
+
+        if [[ ${{ matrix.arch }} == x86_64 ]]; then
+          VERSION="${VERSION}_windows64"
+        else
+          VERSION="${VERSION}_windows32"
+        fi
+
         echo "VERSION=$VERSION" >> $env:GITHUB_ENV
+        echo "PREFIX=$PREFIX" >> $env:GITHUB_ENV
         echo "version: $VERSION"
 
     - name: Download source code and Extract bzip2 file
@@ -131,26 +148,26 @@ jobs:
     - name: Create dist archive (Linux)
       if: runner.os == 'Linux'
       run: |
-        tar -zcvf linux-${{ matrix.arch }}.tar.gz dist
+        tar -zcvf linux-${{ matrix.arch }}-${{ env.PREFIX }}.tar.gz dist
 
     - name: Create dist archive (Windows)
       if: runner.os == 'Windows'
       run: |
-        Compress-Archive -Path dist -DestinationPath windows-${{ matrix.arch }}.zip
-        
+        Compress-Archive -Path dist -DestinationPath windows-${{ matrix.arch }}-${{ env.PREFIX }}.zip
+
     - name: Upload artifact (Linux)
       if: runner.os == 'Linux'
       uses: actions/upload-artifact@v3
       with:
-        name: linux-${{ matrix.arch }}
-        path: linux-${{ matrix.arch }}.tar.gz
-        
+        name: linux-${{ matrix.arch }}-${{ env.PREFIX }}
+        path: linux-${{ matrix.arch }}-${{ env.PREFIX }}.tar.gz
+
     - name: Upload artifact (Windows)
       if: runner.os == 'Windows'
       uses: actions/upload-artifact@v3
       with:
-        name: windows-${{ matrix.arch }}
-        path: windows-${{ matrix.arch }}.zip
+        name: windows-${{ matrix.arch }}-${{ env.PREFIX }}
+        path: windows-${{ matrix.arch }}-${{ env.PREFIX }}.zip
 
   deploy:
     needs: build
@@ -181,5 +198,4 @@ jobs:
         name: Release ${{ github.ref == 'refs/heads/main' && 'nightly' || env.VERSION }}
         draft: false
         prerelease: false
-        files: artifacts/**/*
-
+files: artifacts/**/*
