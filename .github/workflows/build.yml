@@ -23,6 +23,8 @@ jobs:
             arch: arm64
           - os: ubuntu-latest
             cef_version: 'cef_binary_109.1.18+gf1c41e4+chromium-109.0.5414.120'
+          - os: ubuntu-latest
+            arch: x86
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -74,7 +76,7 @@ jobs:
 
           $PREFIX = $($VERSION -split "chromium-")[1];
 
-          if ($env:matrix_arch -eq "x86_64") {
+          if ("${{ matrix.arch }}" -eq "x86_64") {
             $VERSION = "${VERSION}_windows64"
           } else {
             $VERSION = "${VERSION}_windows32"
@@ -119,7 +121,7 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           cd source
-          cmake -DCMAKE_BUILD_TYPE=Release .
+          cmake -DCMAKE_BUILD_TYPE=Release -DPROJECT_ARCH="${{ matrix.arch }}" .
 
       - name: CMake build
         run: |
