@@ -13,17 +13,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-22.04, windows-2022]
         cef_version:
           - 'cef_binary_114.2.11+g87c8807+chromium-114.0.5735.134'
           - 'cef_binary_109.1.18+gf1c41e4+chromium-109.0.5414.120'
         arch: [arm64, x86_64, x86]
         exclude:
-          - os: windows-latest
+          - os: windows-2022
             arch: arm64
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             cef_version: 'cef_binary_109.1.18+gf1c41e4+chromium-109.0.5414.120'
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             arch: x86
     steps:
       - name: Checkout code
@@ -33,7 +33,7 @@ jobs:
         uses: jwlawson/actions-setup-cmake@v1.14
 
       - name: Cross compile toolchain (Linux)
-        if: ${{ matrix.arch == 'arm64' && matrix.os == 'ubuntu-latest' }}
+        if: ${{ matrix.arch == 'arm64' && matrix.os == 'ubuntu-22.04' }}
         run: |
           wget https://snapshots.linaro.org/gnu-toolchain/14.0-2023.06-1/aarch64-linux-gnu/gcc-linaro-14.0.0-2023.06-x86_64_aarch64-linux-gnu.tar.xz
           tar xvf ./gcc-linaro-14.0.0-2023.06-x86_64_aarch64-linux-gnu.tar.xz
@@ -121,7 +121,12 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           cd source
-          cmake -DCMAKE_BUILD_TYPE=Release -DPROJECT_ARCH="${{ matrix.arch }}" .
+
+          if ("${{ matrix.arch }}" -eq "x86_64") {
+            cmake -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022" -A x64 .
+          } else {
+            cmake -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022" -A Win32 .
+          }
 
       - name: CMake build
         run: |
@@ -173,7 +178,7 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
